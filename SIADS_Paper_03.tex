@@ -35,8 +35,8 @@
 %</funding-group>
 
 
-\title{Parameter Estimation for JSPAM Galaxtic Merger Simulations Using a Modified Metropolis-Hastings Method}
-\author{John Wallin, Graham West}
+\title{Parameter Estimation for JSPAM Galactic Merger Simulations Using a Modified Metropolis-Hastings Method}
+\author{Graham West, John Wallin, Zach Sinkala}
 
 
 \begin{document}
@@ -59,7 +59,7 @@ non-linear dynamics, cosmology, MCMC, galaxy mergers, simulation, optimization
 \end{AMS}
 
 \section{Introduction}
-Understanding the morphology and evolution of galactic mergers is a central issue facing modern astrophysicists--in particular, the inverse problem of tracing a merger back in time to determine its dynamical history. Due to the highly non-linear nature of galatic systems as well as limited observational knowledge of a given system's current state, this problem cannot be solved by simply reversing time in an n-body simulation, necessitating the use search algorithms which require a great number of merger simulations to fully explore the parameter space.
+Understanding the morphology and evolution of galactic mergers is a central issue facing modern astrophysicists--in particular, the inverse problem of tracing a merger back in time to determine its dynamical history. Due to the highly non-linear nature of galactic systems as well as limited observational knowledge of a given system's current state, this problem cannot be solved by simply reversing time in an n-body simulation, necessitating the use search algorithms which require a great number of merger simulations to fully explore the parameter space.
 
 In order to resolve this problem, we need three things: 1) a fast simulation code, 2) a fitness function which accurately measures the error between two mergers, and 3) an optimization algorithm which can minimize the fitness function. (Throughout this paper, we will speak of \textit{minimizing} the fitness function since it is in the form of an error function, i.e., a low value means a high fitness.) Step 1 was completed by Wallin et al. \cite{jspam} with the development of the Fortran simulation code entitled JSPAM (\_\_\_\_). Steps 2 and 3 both will be covered in this paper since different fitness functions yield different behaviours in the parameter search process.
 
