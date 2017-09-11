@@ -47,7 +47,7 @@
 % REQUIRED
 \begin{abstract}
 Gravitational N-body models can used to model the dynamical properties of interacting galaxies.  These models represent states in a six-dimensional phase space with three-dimensional projections that can observed with astronomical telescopes.  Although these models have thousands of particles, the dynamical state that describes the system can be represented with twelve dynamical parameters.
-In this paper, we present the implementation and results of an MCMC-type optimization method to solve the problem of estimating these dynamical parameters for galaxy mergers. Using an adaptive Metropolis-Hastings algorithm combined with the appropriate fitness function, we are able to find a merger simulation of minimum error with respect to a given merger target. We explore the connections between the convergence of the method and the sensitivity of the parameters in this system.
+In this paper, we present the implementation and results of an MCMC-type optimization method to solve the problem of estimating these dynamical parameters for galaxy mergers. Using an adaptive Metropolis-Hastings algorithm combined with the appropriate error function, we are able to find a merger simulation of minimum error with respect to a given merger target. We also explore the connections between the convergence of the method and the sensitivity of the parameters in this system.
 \end{abstract}
 
 % REQUIRED
@@ -61,9 +61,9 @@ non-linear dynamics, cosmology, MCMC, galaxy mergers, simulation, optimization
 \end{AMS}
 
 \section{Introduction}
-Understanding the morphology and evolution of galactic mergers is a central issue facing modern astrophysicists--in particular, the inverse problem of tracing a merger back in time to determine its dynamical history. Due to the highly non-linear nature of galactic systems as well as limited observational knowledge of a given system's current state, this problem cannot be solved by simply reversing time in an n-body simulation, necessitating the use search algorithms which require a great number of merger simulations to fully explore the parameter space.
+Understanding the morphology and evolution of galactic mergers is a central issue in contemporary astrophysicis--in particular, the inverse problem of tracing a merger back in time to determine its dynamical history. Due to the highly non-linear nature of galactic systems as well as limited observational knowledge of a given system's current state, this problem cannot be solved by simply reversing time in an N-body simulation, necessitating the use search algorithms which require a great number of merger simulations to fully explore the parameter space.
 
-In order to resolve this problem, we need three things: 1) a fast simulation code, 2) an error function which accurately measures the differences between two mergers, and 3) an optimization algorithm which can minimize the fitness function. Step 1 was completed by Wallin et al. \cite{jspam} with the development of the simulation code entitled JSPAM. Steps 2 and 3 both will be described in this paper since different fitness functions yield different behaviors in the parameter search process.
+In order to resolve this problem, we need three things: 1) a fast simulation code, 2) an error function which accurately measures the differences between two mergers, and 3) an optimization algorithm which can minimize that error function. Step 1 was completed by Wallin et al. \cite{jspam} with the development of the simulation code entitled JSPAM. Steps 2 and 3 both will be described in this paper since an optimization problem is intimiately linked to its error function.
 
 %(Throughout this paper, we will speak of \textit{minimizing} the fitness function since it is in the form of an error function, i.e., a low value means a high fitness.) 
 
@@ -72,20 +72,21 @@ In what follows, we will discuss the tools and data we had at our disposal, incl
 
 \subsection{JSPAM}
 
-Due to the nature of gravitation as a pair-wise interaction and the structure of galaxies being primarily a cloud of massive, interacting particles, the most direct way to simulate a merger would be to set up a full $O(n^2)$ n-body code. Approximations can be made which reduce the complexity to $O(n\hspace{1pt}$log$(n))$--hierarchical tree codes, for example--but, even this is too slow for our purposes. Due to the great quantity of simulations needed to be performed, we required a code which was $O(n)$. Thus, we used the restricted three-body JSPAM code developed by Wallin et al. \cite{jspam}.  
+Due to the nature of gravitation as a pair-wise interaction and the structure of galaxies being primarily a cloud of massive, interacting particles, the most direct way to simulate a merger would be to set up a full $O(n^2)$ N-body code. Approximations can be made which reduce the complexity to $O(n\hspace{1pt}$log$(n))$--hierarchical tree codes, for example--but, even this is too slow for our purposes. Due to the great quantity of simulations needed to be performed, we required a code which was $O(n)$. Thus, we used the restricted three-body JSPAM code developed by Wallin et al. \cite{jspam}.
 
+This code makes several significant simplifications for the sake of runtime, but since the mergers are not simulated over a long time interval, accuracy is retained.  A detailed description of the code is contained in \cite{jspam}, so we will provide only a brief overview of its functionality. Within the code, galaxies themselves are comprised of two parts: a center of mass and a swarm of massless particles. The massless particles only interact with the masses of the two galaxies while the centers of mass interact with both each other and the particles.  Initially these particles are placed in a single disk of circular orbits in specified orbital plane around the center of mass of their respective galaxy.  The gravitational fields
+%(say field or potential?)
+around the center of masses of the galaxies are spherically symmetric.  These fields are modeled after the disk, bulge and halo potential described by Hernquist (1988?) used to model the self-consistent gravitational fields of disk galaxies.
 
-This code makes several significant simplifications for the sake of runtime, but since the mergers are not simulated over a long time interval, accuracy is retained.  A detailed description of the code is contained in \cite{jspam}, so we will provide only a brief overview of how it functions here. Within the code, galaxies themselves are comprised of two parts: a center of mass and a swarm of massless particles. The massless particles only interact with the masses of the two galaxies while the centers of mass interact with each other and the particles.  Initially these particles are put in a disk of circular orbits in specified orbital plane around the center of mass of the galaxy.  The gravitational fields around the center of masses of the galaxies are spherically symmetric.  These fields are modeled after the disk, bulge and halo potential described by Hernquist (1988?) used to model the self-consistent gravitational fields of disk galaxies.  
-  The reference frame of the simulation is setup so that one galaxy (called the primary) is initially at the origin with zero velocity and the other galaxy (called the secondary) is given a relative position and velocity.  The equation that describes the acceleration of the ith particle is at position $r_i$ is:
+The reference frame of the simulation is setup so that one galaxy (called the primary) is initially at the origin with zero velocity and the other galaxy (called the secondary) is given a relative position and velocity.  The equation that describes the acceleration of the ith particle is at position $r_i$ is:
 % big equation needed here
 \begin{equation}
-\vec{a}_i = - \frac{G M_1(| \vec{r}_i - \vec{r}_1|)}{ (\vec{r}_i - \vec{r}_1)^2}\hat{r}_{i1} -
-\frac{G M_2(| \vec{r}_i - \vec{r}_2|)}{ (\vec{r}_i - \vec{r}_2)^2}\hat{r}_{i2} 
+\vec{a}_i = - \frac{G M_1(| \vec{r}_i - \vec{R}_1|)}{ (\vec{r}_i - \vec{R}_1)^2}\hat{r}_{i1} -
+\frac{G M_2(| \vec{r}_i - \vec{R}_2|)}{ (\vec{r}_i - \vec{R}_2)^2}\hat{r}_{i2} 
 \end{equation}
+where $M_1(r)$ and $M_2(r)$ are the cumulative mass distributions of the two galaxies, $R_1$ and $R_2$ and the center of mass positions, and G is the universal gravitational constant.
 
-Where $M_1(r)$ and $M_2(r)$ are the mass distributions of the two galaxies, $r_1$ and $r_2$ and the center of mass positions and G is the universal gravitational constant.
-
-The list of dynamical parameters which describe the merger include these relative positions and velocities, the masses of the galaxies, their radii, and their orientations in terms of altitude and azimuth (w.r.t. the $z$-axis), for a total of 14 parameters.  Since the projected position of the two galaxies are constrained by astronomical observations, there are 12 free parameters in the simulations.
+The list of dynamical parameters which describe the merger include these relative positions and velocities, the masses of the galaxies, their radii, and their orientations in terms of altitude and azimuth (w.r.t. the $z$-axis), for a total of 14 parameters.  Since the projected position of the two galaxies are constrained by astronomical observations (x, y are always known), there are 12 free parameters in the simulations.
 
 \begin{figure}[!h]
 	\centering
@@ -99,7 +100,7 @@ Given a list of \emph{final} parameters post-merger, the centers of mass are pla
 
 \subsection{Galaxy Zoo: Mergers and Merger Wars}
 
-From a computational perspective, the problem of finding an appropriate fitness function for comparing morphologies is a real challenge. It is difficult to find a method that is robust enough to perform on a level equivalent to that of a human. By nature, humans are excellent at pattern recognition; and where it can be difficult to ``train'' an algorithm to spot similarities between objects, humans can do it almost instinctively. For this reason, Holincheck et al. \cite{citizen} employed the help of thousands of Citizen Scientists to assist the \emph{Galaxy Zoo: Mergers} project in which they volunteered their pattern recognition abilities to determine best-fit models for 62 actual mergers.
+From a computational perspective, the problem of finding an appropriate function for comparing morphologies is a real challenge. It is difficult to find a method that is robust enough to perform on a level equivalent to that of a human. By nature, humans are excellent at pattern recognition; and where it can be difficult to ``train'' an algorithm to spot similarities between objects, humans can do it almost instinctively. For this reason, Holincheck et al. \cite{citizen} employed the help of thousands of citizen scientists to assist the \emph{Galaxy Zoo: Mergers} project in which they volunteered their pattern recognition abilities to determine best-fit models for 62 actual mergers.
 
 The volunteers analyzed the morphologies of many thousands of simulations via a vote-based tournament scheme called the \emph{Merger Wars} algorithm. In a typical session, a volunteer is shown an image of the target (the actual merger) along with two simulations which model the target. The volunteer then chooses which simulation is most similar to the target, which counts as a ``win'' for one and a ``loss'' for the other. (They can also select neither image, thereby affording both images a loss.) Since it is entirely possible for images to be judged poorly, every simulation participates in multiple rounds of the tournament so that a bad round does not have a large impact on the results of the competition. The fitness of a particular simulation is then calculated as the percentage of ``wins'' it achieved, with the maximum being 1. Since an integral part of our research involved find an explicit mathematical fitness function for the merger morphologies, it was very useful to have the \emph{Merger Wars} data with which we could assess the validity of our own data.
 
@@ -118,11 +119,11 @@ The end goal of our research is to construct an automated pipeline which can com
 
 \section{Methods}
 
-At its heart, a parameter estimation problem is essentially an optimization problem in which one minimizes a given error funciton w.r.t. a set of parameters. The two fundamental parts to the solution of such an optimization problem 1) a reliable fitness function and 2) a robust optimization algorithm. In this section, we will examine the reasoning behind the function we developed as well as the modifications we made to the canonical Metropolis-Hastings method.
+At its heart, a parameter estimation problem is essentially an optimization problem in which one minimizes a given error funciton w.r.t. a set of parameters. The two fundamental parts to the solution of such an optimization problem 1) an error function and 2) a optimization algorithm. In this section, we will examine the reasoning behind the function we developed as well as the modifications we made to the canonical Metropolis-Hastings method.
 
-\subsection{Fitness Function}
+\subsection{Error Function}
 
-There are essentially two types of information which our fitness function may draw upon: particle positions and velocities. Obviously, however, we can't evalute our fitness function on a per-particle basis because--among many reasons--once we begin using real merger targets, we will not have per-star information for the actual mergers. (NOTE: It was very important that we kept the context of real merger targets in our minds as we experimented with the different fitness functions because whatever we decided on in the testing phase must still be able to work when applied to real targets.) Fortunately, this restriction led us to an elegant solution to the problem. The data is in the format of a $54 \times 54$ image for the $z$-velocity and a $512 \times 512$ image for visible light. Therefore, simply binning the particle number and $z$-velocity of a simulation will give us an equivalent format.
+There are essentially two types of information which our error function must capture: particle positions and velocities. Obviously, however, we can't evalute our function on a per-particle basis because--among many reasons--once we begin using real merger targets, we will not have per-star information for the actual mergers. (NOTE: It was very important that we kept the context of real merger targets in our minds as we experimented with the different functions because whatever we decided on in the testing phase must still be able to work when applied to real targets.) Fortunately, this restriction led us to an elegant solution to the problem. The MaNGA data is in the format of a $54 \times 54$ image for the $z$-velocity and a $512 \times 512$ image for visible light intensity. Therefore, simply binning the particle number and $z$-velocity of a simulation will give us an equivalent format.
 
 \begin{figure}[!h]
 	\centering
@@ -133,15 +134,19 @@ There are essentially two types of information which our fitness function may dr
 		\caption{Left: a per-particle image of a merger simulation. Right: a 50x50 square-binning of the left image (high-density regions are red and low-density regions are blue). Bottom: a 50x50 square-binning of the $z$-velocities.}
 \end{figure}
 
-Binning the particle number is trivial; however, when binning the $z$-velocity, we must account for the opacity of the gas and dust within the galaxies. To do so, we bin the velocities in 3D, averageing the values of all the particles within each bin to get its value. The equation which governs the decrease in intensity of light as it passes through a medium or density $\rho$ from $z_-$ to $z_+$is:
+Binning the particle number is trivial; however, when binning the $z$-velocity, we must account for the opacity of gas and dust within the galaxies. To do so, we bin the velocities in 3D, averageing the values of all the particles within each bin to get its value. The equation which governs the decrease in intensity of light as it passes through a medium of density $\rho$ from $z_-$ to $z_+$ is:
 \begin{equation}
-	I(x,y,z) = I(x,y,z_-) \textrm{\hspace{2pt}exp}(-\kappa \int_{z_-}^{z_+} \rho(x,y,z) dz)
+	I(x,y,z_-) = I_0(x,y,z_-) \textrm{\hspace{2pt}exp}(-\kappa \int_{z_-}^{z_+} \rho(x,y,z') dz')
 \end{equation}
+where $I_0$ is the the actual intensity of light generated at a point and $I$ is the intensity observed after the light has passed through 
 Now, we use this a kernel weighting for the velocity to map it from 2D to 3D:
 \begin{equation}
 	v_{2D}(x,y) = \dfrac{\int_{z_-}^{z_+}v_{3D}(x,y,z)I(x,y,z)dz}{\int_{z_-}^{z_+}I(x,y,z)dz}
 \end{equation}
-Having binned the simulation, we have two grids representing the $x$-$y$ distribution of particle density and $z$-velocity. We now divide the fitness function into two parts, one relateing to the particle distribution and the other to the RMS error of the $z$-velocities of merger target and simulation (NOTE: Our fitness function is an error function, so small values mean high fitness):
+
+% differentiate between the intensity of light generated at a point versus that obsevered after opacity
+
+Having binned the simulation, we have two grids representing the $x$-$y$ distribution of particle density and $z$-velocity. We now divide the error function into two parts, one relateing to the similarity of the mergers' particle distributions and the other to the RMS error of the $z$-velocities between the target and simulation:
 \begin{equation}
 	f(sim, tar) = (1-OvrFrac) \cdot RMS
 \end{equation}
@@ -151,10 +156,11 @@ where,
 \end{equation}
 and
 \begin{equation}
-	RMS^2 = \sum_{k}^{} w_k(v^{sim}_k-v^{tar}_k)^2
+	RMS^2 = \dfrac{1}{A^{ovr}}\sum_{k}^{} w_k(v^{sim}_k-v^{tar}_k)^2
 \end{equation}
-In these equations, $sim$ and $tar$ are indices referring to the \textit{simulation} and \textit{target}, respectively. $OvrFrac$--the overlap fraction--is the fraction of bins (or area, denoted by $A$) in which both the simulation and the target have particles present. RMS is the root-mean-squared error between the velocity fields only calculated over the overlapping pixels (thus, $w_k = 1$ if the pixels overlap, $w_k = 0$ otherwise). We experimented with different weighting, but none performed significantly better than this trivial case.
+In these equations, $sim$ and $tar$ are indices referring to the \textit{simulation} and \textit{target}, respectively. $OvrFrac$--the overlap fraction--is the fraction of bins/pixels/area in which both the simulation and the target have particles present ($A^{sim}$, for example, is the number of simulation bins with particles present). RMS is the root-mean-squared error between the velocity fields only calculated over the overlapping bins and normalized by the number of overlapping bins (thus, $w_k = 1$ if the pixels overlap, $w_k = 0$ otherwise). We experimented with different weighting schemes, all of which performed roughly similarly.
 
+% not really the converse
 It is important to have both the overlap and RMS terms in the function. Consider the fact that morphologically similar mergers will have have high overlap and low velocity error, but the converse of this statement is not necessarily true. If the overlap is high, there is a proability that the velocity error could still be large, or vice versa. This probability is decreased if we include both velocity and overlap in the calculation.
 
 \subsection{Adaptive Metropolis-Hastings}
