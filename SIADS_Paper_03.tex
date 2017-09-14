@@ -119,11 +119,24 @@ The end goal of our research is to construct an automated pipeline which can com
 
 \section{Methods}
 
-At its heart, a parameter estimation problem is essentially an optimization problem in which one minimizes a given error funciton w.r.t. a set of parameters. The two fundamental parts to the solution of such an optimization problem 1) an error function and 2) a optimization algorithm. In this section, we will examine the reasoning behind the function we developed as well as the modifications we made to the canonical Metropolis-Hastings method.
+At its heart, a parameter estimation problem is essentially an optimization problem in which one minimizes a given error funciton w.r.t. a set of parameters. The two fundamental parts to the solution of such an optimization problem are 1) a meaningful error function and 2) a robust optimization algorithm. In this section, we will examine the reasoning behind the function we developed as well as the modifications we made to the canonical Metropolis-Hastings method.
 
 \subsection{Error Function}
 
-There are essentially two types of information which our error function must capture: particle positions and velocities. Obviously, however, we can't evalute our function on a per-particle basis because--among many reasons--once we begin using real merger targets, we will not have per-star information for the actual mergers. (NOTE: It was very important that we kept the context of real merger targets in our minds as we experimented with the different functions because whatever we decided on in the testing phase must still be able to work when applied to real targets.) Fortunately, this restriction led us to an elegant solution to the problem. The MaNGA data is in the format of a $54 \times 54$ image for the $z$-velocity and a $512 \times 512$ image for visible light intensity. Therefore, simply binning the particle number and $z$-velocity of a simulation will give us an equivalent format.
+There are essentially two types of information which our error function must capture: particle positions and velocities. Obviously, however, we can't evalute our function on a per-particle basis because--among many reasons--once we begin using real merger targets, we will not have per-star information for them. It was very important that we kept the context of real merger targets in our minds as we experimented with the different functions because whatever we decided on in the testing phase must still be applicable to real targets. Fortunately, this restriction led us to an elegant solution to the problem. The MaNGA data is in the format of a $54 \times 54$ image for the $z$-velocity and a $512 \times 512$ image for visible light intensity. Therefore, simply binning the particle number and $z$-velocity of a simulation will give us an equivalent format.
+
+% mention alignment
+
+Binning the particle number is trivial; however, when binning the $z$-velocity, we must account for the opacity of gas and dust within the galaxies. To do so, we bin the velocities in 3D, averageing the values of all the particles within each bin to get its value. The equation which governs the decrease in intensity of light as it passes through a medium of density $\rho$ from $z_-$ to $z_+$ is:
+\begin{equation}
+	I(x,y,z_-) = I_0(x,y,z_-) \textrm{\hspace{2pt}exp}(-\kappa \int_{z_-}^{z_+} \rho(x,y,z') dz')
+\end{equation}
+where $I_0$ is the the actual intensity of light generated at a point and $I$ is the intensity observed after the light has passed through  Now, we use this as a kernel weighting for the velocity to map it from 2D to 3D:
+\begin{equation}
+	v_{2D}(x,y) = \dfrac{\int_{z_-}^{z_+}v_{3D}(x,y,z)I(x,y,z)dz}{\int_{z_-}^{z_+}I(x,y,z)dz}
+\end{equation}
+
+% discretization
 
 \begin{figure}[!h]
 	\centering
@@ -134,52 +147,72 @@ There are essentially two types of information which our error function must cap
 		\caption{Left: a per-particle image of a merger simulation. Right: a 50x50 square-binning of the left image (high-density regions are red and low-density regions are blue). Bottom: a 50x50 square-binning of the $z$-velocities.}
 \end{figure}
 
-Binning the particle number is trivial; however, when binning the $z$-velocity, we must account for the opacity of gas and dust within the galaxies. To do so, we bin the velocities in 3D, averageing the values of all the particles within each bin to get its value. The equation which governs the decrease in intensity of light as it passes through a medium of density $\rho$ from $z_-$ to $z_+$ is:
-\begin{equation}
-	I(x,y,z_-) = I_0(x,y,z_-) \textrm{\hspace{2pt}exp}(-\kappa \int_{z_-}^{z_+} \rho(x,y,z') dz')
-\end{equation}
-where $I_0$ is the the actual intensity of light generated at a point and $I$ is the intensity observed after the light has passed through 
-Now, we use this a kernel weighting for the velocity to map it from 2D to 3D:
-\begin{equation}
-	v_{2D}(x,y) = \dfrac{\int_{z_-}^{z_+}v_{3D}(x,y,z)I(x,y,z)dz}{\int_{z_-}^{z_+}I(x,y,z)dz}
-\end{equation}
+% plot to demonstrate opacity vs no opacity
 
 % differentiate between the intensity of light generated at a point versus that obsevered after opacity
 
-Having binned the simulation, we have two grids representing the $x$-$y$ distribution of particle density and $z$-velocity. We now divide the error function into two parts, one relateing to the similarity of the mergers' particle distributions and the other to the RMS error of the $z$-velocities between the target and simulation:
+Having binned the simulation, we have two grids representing the $x$-$y$ distribution of particle density and $z$-velocity. We now divide the error function into two parts, one representing the similarity of the mergers' particle distributions and the other the RMS error of the $z$-velocities between them:
 \begin{equation}
-	f(sim, tar) = (1-OvrFrac) \cdot RMS
+	f(X, X_0) = (1-OvrFrac) \cdot RMS
 \end{equation}
 where,
 \begin{equation}
-	OvrFrac = \dfrac{A^{ovr}}{A^{sim}+A^{tar}-A^{ovr}}
+	OvrFrac = \dfrac{A_{X \cap X_0}}{A_{X}+A_{X_0}-A_{X \cap X_0}}
 \end{equation}
 and
 \begin{equation}
-	RMS^2 = \dfrac{1}{A^{ovr}}\sum_{k}^{} w_k(v^{sim}_k-v^{tar}_k)^2
+	RMS^2 = \dfrac{1}{A_{X \cap X_0}}\sum_{k}^{} w_k|v_{X,k}-v_{X_0,k}|^2
 \end{equation}
-In these equations, $sim$ and $tar$ are indices referring to the \textit{simulation} and \textit{target}, respectively. $OvrFrac$--the overlap fraction--is the fraction of bins/pixels/area in which both the simulation and the target have particles present ($A^{sim}$, for example, is the number of simulation bins with particles present). RMS is the root-mean-squared error between the velocity fields only calculated over the overlapping bins and normalized by the number of overlapping bins (thus, $w_k = 1$ if the pixels overlap, $w_k = 0$ otherwise). We experimented with different weighting schemes, all of which performed roughly similarly.
+In these equations, $X$, $X_0$, and $X \cap X_0$ are indices referring to the \textit{simulation}, \textit{target}, and their intersection, respectively.  So, $A_{X}$ is the number of \textit{simulation} bins with particles present, $A_{X_0}$ the number of \textit{target} bins, and $A_{X \cap X_0}$ the number of \textit{overlapping} bins they share. The overlap fraction, $OvrFrac$, is the fraction of bins/pixels/area in which both the simulation and the target have particles present. $RMS$ is the weighted root-mean-squared error between the velocity fields only calculated over the overlapping bins and normalized by the number of overlapping bins (thus, $w_k = 1$ if the pixels overlap, $w_k = 0$ otherwise).
 
-% not really the converse
+% what order to put these next two paragraphs in???
+We experimented with different weighting schemes...
+
+% converse is the wrong word
 It is important to have both the overlap and RMS terms in the function. Consider the fact that morphologically similar mergers will have have high overlap and low velocity error, but the converse of this statement is not necessarily true. If the overlap is high, there is a proability that the velocity error could still be large, or vice versa. This probability is decreased if we include both velocity and overlap in the calculation.
 
 \subsection{Adaptive Metropolis-Hastings}
 
-Due to the choatic nature of the merger system, the fitness lanscape of the parameters space is incredibly complicated, having countless local maxima and minima. Consequently, any gradient-based optimization scheme would be utterly unreliable. Therefore, we chose a more robust, MCMC method: Metropolis-Hastings. Given an initial guess, this method takes random jumps through parameter space in an attempt to find the parameters set which most likely produced the given data. To maximize this probability, we calculate the log-probability at each step,
+% say something about the jump_sigma of the different params before talking about adaptive
+
+Due to the chaotic nature of the merger system, the error lanscape of the parameters space is incredibly complicated, having countless local maxima and minima. Consequently, any naive gradient-based optimization scheme would be utterly unreliable. Therefore, we chose a more robust MCMC method called the Metropolis-Hastings algorithm. Given an initial set of parameter values, this method applies random--in our case normally-distributed--perturbations to the parameters. Each parameter $i$ has its own specified $\sigma_i$ for its associated distribution. At each subsequent step, the perturbations are accepted with probability $\alpha$, given by:
 \begin{equation}
-	log(P) = -n_{bin}^2 \cdot (\dfrac{1}{2}log(2 \pi \sigma^2) + \dfrac{f(sim,tar)^2}{2 \sigma^2})
+	\alpha(X', X) = \textrm{min}(1, \dfrac{P(X',X_0)}{P(X,X_0)})
 \end{equation}
-where the images are $n_{bin} \times n_{bin}$ and $\sigma$ is a value between 0.0-0.5.
+where $X'$ is the current, pperturbed simulation and $X$ is last previously accepted simulation and $P$ is given by its logairthm:
+\begin{equation}
+	\textrm{log}(P(X,X_0)) = \dfrac{1}{2}\textrm{log}(2 \pi \Delta^2) + \dfrac{f(X,X_0)^2}{2 \Delta^2}
+\end{equation}
+where $\Delta$ is a value representing the scale of the error. Also, the larger $\Delta$ becomes, the more relaxed the method will be to accept poorer simulations. In the canonical algorithm, the $\sigma_i$ values are fixed; however, we included additional functionality to allow them to adapt if multiple simulations are consequtively rejected. Let $\sigma_{i,j}$ be the $\sigma$ value for the $i$-th parameter after $j$ consequtive rejections. Then,
+\begin{equation}
+	\sigma_{i,j} = 
+	\begin{cases} 
+		\sigma_i & j \hspace{2pt} \textrm{mod} \hspace{2pt} 3 = 0 \\
+		\sigma_i \cdot  M_j & j \hspace{2pt} \textrm{mod} \hspace{2pt} 3 = 1 \\
+		\sigma_i \cdot  m_j & j \hspace{2pt} \textrm{mod} \hspace{2pt} 3 = 2
+	\end{cases}
+\end{equation}
+where,
+\begin{gather}
+	M_j = (1+a)^{(j+2)/3} \\
+	m_j = (1-b)^{(j+1)/3}
+\end{gather}
+and $0<a,b<1$. These two factors serve to alternate between increasing, decreasing, and resetting the $\sigma$ values so that the MCMC can escape local minima and fall into a thin global minimum quicker.
+
+% maybe a diagram to explain
+
+%Everything described up to this point can be found in the canonical Metropolis-Hastings algorithm; however, due to the chaotic nature of our error function, we decided to add some extra functionality to assist the convergence of the algorithm. In the canonical algorithm, the $\sigma$ values for the parameter perturbations are fixed, but 
 
 
 
-How in depth do I go about Metropolis?
 
 
 \section{Testing, Results, and Analysis}
-During testing all of our binning resolution ranged between $30\times30$ to $50\times50$ and particle numbers were between $5000$ and $30000$ per galaxy. Our method of testing consisted of running many instances of the method in parallel all with the same target and initial parameters, but allowing different paths through parameter space. We would then plot the Markov chains to see how many--if any--instances eventually reached below a given error threshold. Once we found what appeared to be a successful instance, we would plot several mergers along the Markov chain to see how much improvement was made.
+Since MCMC is stochastic, individual runs tell us nothing about its convergibility. We must run many tests and calculate statistics on the collective results. Therefore, our method of testing consisted of running many instances of the MCMC in parallel, all with the same target and initial parameters, but allowing different paths through parameter space. We let the MCMC run for a fixed number of steps and determined if a run converged based on whether it reached a specified error threshold. We would then generate numerous plots and statistics with which we could determine how successful the runs were.
 
-When testing our method, we were very impressed by its ability to determine morphological matches to the target. 
+During testing, our binning resolution ranged between 15$\times$15 to 54$\times$54 and particle numbers were between 1,000 and 10,000 per galaxy. 
+
+
 
 
 
