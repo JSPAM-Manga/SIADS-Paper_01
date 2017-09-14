@@ -44,6 +44,7 @@
 
 \maketitle
 
+
 % REQUIRED
 \begin{abstract}
 Gravitational N-body models can used to model the dynamical properties of interacting galaxies.  These models represent states in a six-dimensional phase space with three-dimensional projections that can observed with astronomical telescopes.  Although these models have thousands of particles, the dynamical state that describes the system can be represented with twelve dynamical parameters.
@@ -59,6 +60,7 @@ non-linear dynamics, cosmology, MCMC, galaxy mergers, simulation, optimization
 \begin{AMS}
   68Q25, 68R10, 68U05
 \end{AMS}
+
 
 \section{Introduction}
 Understanding the morphology and evolution of galactic mergers is a central issue in contemporary astrophysicis--in particular, the inverse problem of tracing a merger back in time to determine its dynamical history. Due to the highly non-linear nature of galactic systems as well as limited observational knowledge of a given system's current state, this problem cannot be solved by simply reversing time in an N-body simulation, necessitating the use search algorithms which require a great number of merger simulations to fully explore the parameter space.
@@ -163,9 +165,19 @@ and
 \begin{equation}
 	RMS^2 = \dfrac{1}{A_{X \cap X_0}}\sum_{k}^{} w_k|v_{X,k}-v_{X_0,k}|^2
 \end{equation}
+
+% JW Note: 
+% There is a slight problem here - specifically in the case where there is zero overlap.  In that case, 
+% OveFRAC = 1 and RMS^2 = 0
+% this means our f(X, X_0) will be 0 because all the weights are zero.
+% I think this isn't a real problem for us because the Overlap fraction is always greater than 1 since we align the target galaxy to the 
+% same physical coordinates.   However, we should address this in the paper.
+
 In these equations, $X$, $X_0$, and $X \cap X_0$ are indices referring to the \textit{simulation}, \textit{target}, and their intersection, respectively.  So, $A_{X}$ is the number of \textit{simulation} bins with particles present, $A_{X_0}$ the number of \textit{target} bins, and $A_{X \cap X_0}$ the number of \textit{overlapping} bins they share. The overlap fraction, $OvrFrac$, is the fraction of bins/pixels/area in which both the simulation and the target have particles present. $RMS$ is the weighted root-mean-squared error between the velocity fields only calculated over the overlapping bins and normalized by the number of overlapping bins (thus, $w_k = 1$ if the pixels overlap, $w_k = 0$ otherwise).
 
 % what order to put these next two paragraphs in???
+Although this weighting system is not perfect, it works adequately for systems where was have a measured velocity across the interacting galaxy system.  The MaNGA project in the Sloan Digital Sky Survey {\bf REFERENCE NEEDED} was designed specifcally to measure these quantities for real galaxies.  This project will sample the velocity fields for about 10,000 galaxies over its mission using integrated field spectroscopy.   Although most of the galaxies in the sample will not be gravitationally interacting with a neighbor, we expect to have a sample of a few hundred interacting systems within the next several years.   In addition to providing the velocity field, the mission also provides the ionization state for several different atomic species to allow measurements of quantiites such as star formation rate, internal absorption, and temperature of the interstellar medium. 
+
 We experimented with different weighting schemes...
 
 % converse is the wrong word
@@ -199,20 +211,94 @@ where,
 \end{gather}
 and $0<a,b<1$. These two factors serve to alternate between increasing, decreasing, and resetting the $\sigma$ values so that the MCMC can escape local minima and fall into a thin global minimum quicker.
 
+We will discuss the values used for $a$ and $b$ in the next section, along with the impact this modification has on convergence.
+
 % maybe a diagram to explain
 
 %Everything described up to this point can be found in the canonical Metropolis-Hastings algorithm; however, due to the chaotic nature of our error function, we decided to add some extra functionality to assist the convergence of the algorithm. In the canonical algorithm, the $\sigma$ values for the parameter perturbations are fixed, but 
 
+\subsection{Measuring Convergence}
+
+ 
+
+\subsubsection{sensitivity}
+To measure the sensitivity, we sweep through a range of physically reasonable values for each the the parameters and calculate the fitness as a function fo the parameter's value.  The peak of the fitness function should occur when we have a perfect match.  
+ 
+ Graham  - write this - picking the optimal and first step size for the MCMC
+
+\subsubsection{Probablity of Convergence within N-steps}
 
 
-
-
-\section{Testing, Results, and Analysis}
-Since MCMC is stochastic, individual runs tell us nothing about its convergibility. We must run many tests and calculate statistics on the collective results. Therefore, our method of testing consisted of running many instances of the MCMC in parallel, all with the same target and initial parameters, but allowing different paths through parameter space. We let the MCMC run for a fixed number of steps and determined if a run converged based on whether it reached a specified error threshold. We would then generate numerous plots and statistics with which we could determine how successful the runs were.
+\section{Results}
+Since MCMC is stochastic, individual runs tell us nothing about its convergence. We must run many tests and calculate statistics on the collective results. Therefore, our method of testing consisted of running many instances of the MCMC in parallel, all with the same target and initial parameters, but allowing different paths through parameter space. We let the MCMC run for a fixed number of steps and determined if a run converged based on whether it reached a specified error threshold. We would then generate numerous plots and statistics with which we could determine how successful the runs were.
 
 During testing, our binning resolution ranged between 15$\times$15 to 54$\times$54 and particle numbers were between 1,000 and 10,000 per galaxy. 
 
 
+We will first consider the convergence using MCMC of a each parameter individually while holding the other values fixed.  
+
+
+
+\subsection{Example 1 - Heart shaped galaxy}
+Describe the galaxy we are modeling
+%JW write this
+Interacting ring galaxy - di
+- number of models that were run by volunteers
+- number of "good models"
+- fitness function results 
+- issues with the best fit
+- real velocity field has been observed by MaNGA
+
+For our purposes, we will use the best fit model as our target system rather than the observations.  This allows us to do additional sampling and to know the exact dynamical parameters. 
+
+
+To ex
+
+\subsubsection{parameter values}
+
+To measure the sensitivity, we sweep through a range of physically reasonable values for each the the parameters and calculate the fitness as a function fo the parameter's value.  The peak of the fitness function should occur when we have a perfect match.  
+  - 
+ For this galaxies, we list the values we are using along with the range allowed in the models.
+ Make a table
+ parameter 1, actual value, minimum value, maximum value.
+ parameter 2, actual value, minimum value, maximum value.
+ parameter 3, actual value, minimum value, maximum value.
+ parameter 4, actual value, minimum value, maximum value.
+ parameter 5, actual value, minimum value, maximum value.
+ 
+ 
+ 
+ \subsection{Physical convergence - what does it look like?}
+ 
+ \subsection{Parameter values and fitness}
+ 
+ Plots of the error vs parameter values for each parameter.  
+ 
+ 
+ \subsection{Convergence and parameter values}
+ 
+ MCMC plots
+ 
+ Density heat maps
+ 
+ 
+ 
+\subsection{Example 2}
+
+\subsubsection{parameter values}
+
+To measure the sensitivity, we sweep through a range of physically reasonable values for each the the parameters and calculate the fitness as a function fo the parameter's value.  The peak of the fitness function should occur when we have a perfect match.  
+ 
+ For this galaxies, we list the values we are using along with the range allowed in the models.
+ Make a table
+ parameter 1, actual value, minimum value, maximum value.
+ parameter 2, actual value, minimum value, maximum value.
+ parameter 3, actual value, minimum value, maximum value.
+ parameter 4, actual value, minimum value, maximum value.
+ parameter 5, actual value, minimum value, maximum value.
+ 
+
+\section{Analysis}
 
 
 
