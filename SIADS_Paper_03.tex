@@ -155,7 +155,7 @@ where $I_0$ is the the actual intensity of light generated at a point and $I$ is
 
 Having binned the simulation, we have two grids representing the $x$-$y$ distribution of particle density and $z$-velocity. We now divide the error function into two parts, one representing the similarity of the mergers' particle distributions and the other the RMS error of the $z$-velocities between them:
 \begin{equation}
-	f(X, X_0) = (1-OvrFrac) \cdot RMS
+	f(X, X_0) = (1-OvrFrac) \cdot RMSE
 \end{equation}
 where,
 \begin{equation}
@@ -163,7 +163,7 @@ where,
 \end{equation}
 and
 \begin{equation}
-	RMS^2 = \dfrac{1}{A_{X \cap X_0}}\sum_{k}^{} w_k|v_{X,k}-v_{X_0,k}|^2
+	RMSE^2 = \dfrac{1}{A_{X \cap X_0}}\sum_{k}^{} w_k|v_{X,k}-v_{X_0,k}|^2
 \end{equation}
 
 % JW Note: 
@@ -173,15 +173,15 @@ and
 % I think this isn't a real problem for us because the Overlap fraction is always greater than 1 since we align the target galaxy to the 
 % same physical coordinates.   However, we should address this in the paper.
 
-In these equations, $X$, $X_0$, and $X \cap X_0$ are indices referring to the \textit{simulation}, \textit{target}, and their intersection, respectively.  So, $A_{X}$ is the number of \textit{simulation} bins with particles present, $A_{X_0}$ the number of \textit{target} bins, and $A_{X \cap X_0}$ the number of \textit{overlapping} bins they share. The overlap fraction, $OvrFrac$, is the fraction of bins/pixels/area in which both the simulation and the target have particles present. $RMS$ is the weighted root-mean-squared error between the velocity fields only calculated over the overlapping bins and normalized by the number of overlapping bins (thus, $w_k = 1$ if the pixels overlap, $w_k = 0$ otherwise).
+In these equations, $X$, $X_0$, and $X \cap X_0$ are indices referring to the \textit{simulation}, \textit{target}, and their intersection, respectively.  So, $A_{X}$ is the number of \textit{simulation} bins with particles present, $A_{X_0}$ the number of \textit{target} bins, and $A_{X \cap X_0}$ the number of \textit{overlapping} bins they share. The overlap fraction, $OvrFrac$, is the fraction of bins/pixels/area in which both the simulation and the target have particles present. $RMSE$ is the weighted root-mean-squared error between the velocity fields only calculated over the overlapping bins and normalized by the number of overlapping bins (thus, $w_k = 1$ if the pixels overlap, $w_k = 0$ otherwise).
+
+We experimented with different weighting schemes...
 
 % what order to put these next two paragraphs in???
 Although this weighting system is not perfect, it works adequately for systems where was have a measured velocity across the interacting galaxy system.  The MaNGA project in the Sloan Digital Sky Survey {\bf REFERENCE NEEDED} was designed specifcally to measure these quantities for real galaxies.  This project will sample the velocity fields for about 10,000 galaxies over its mission using integrated field spectroscopy.   Although most of the galaxies in the sample will not be gravitationally interacting with a neighbor, we expect to have a sample of a few hundred interacting systems within the next several years.   In addition to providing the velocity field, the mission also provides the ionization state for several different atomic species to allow measurements of quantiites such as star formation rate, internal absorption, and temperature of the interstellar medium. 
 
-We experimented with different weighting schemes...
-
 % converse is the wrong word
-It is important to have both the overlap and RMS terms in the function. Consider the fact that morphologically similar mergers will have have high overlap and low velocity error, but the converse of this statement is not necessarily true. If the overlap is high, there is a proability that the velocity error could still be large, or vice versa. This probability is decreased if we include both velocity and overlap in the calculation.
+It is important to have both the overlap and RMSE terms in the function. Consider the fact that morphologically similar mergers will have have high overlap and low velocity error, but the converse of this statement is not necessarily true. If the overlap is high, there is a proability that the velocity error could still be large, or vice versa. This probability is decreased if we include both velocity and overlap in the calculation.
 
 \subsection{Adaptive Metropolis-Hastings}
 
@@ -218,15 +218,22 @@ We will discuss the values used for $a$ and $b$ in the next section, along with 
 %Everything described up to this point can be found in the canonical Metropolis-Hastings algorithm; however, due to the chaotic nature of our error function, we decided to add some extra functionality to assist the convergence of the algorithm. In the canonical algorithm, the $\sigma$ values for the parameter perturbations are fixed, but 
 
 \subsection{Measuring Convergence}
+One of the most important problems we faced was that of determining how well our method converges. We wanted a technique which would account for both how accurately and how quickly convergence occurs as we varied the magnitude of the initial perturbation. Our final product was a technique which could calculate the probability of convergence within a fixed number of steps given an initial perturbation.
 
- 
+\subsubsection{Error vs. Parameters}
+We began with a univariate analysis of the error function, sampling it over an interval of equally-spaced points centered on the target's parameter value.
 
-\subsubsection{sensitivity}
+% plot with alpha, nBin, nPart...
+
+
+
+
+
 To measure the sensitivity, we sweep through a range of physically reasonable values for each the the parameters and calculate the fitness as a function fo the parameter's value.  The peak of the fitness function should occur when we have a perfect match.  
  
  Graham  - write this - picking the optimal and first step size for the MCMC
 
-\subsubsection{Probablity of Convergence within N-steps}
+\subsubsection{Probablity of Convergence within $n$-Steps}
 
 
 \section{Results}
