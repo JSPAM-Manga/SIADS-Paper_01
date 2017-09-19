@@ -135,8 +135,16 @@ Binning the particle number is trivial; however, when binning the $z$-velocity, 
 \end{equation}
 where $I_0$ is the the actual intensity of light generated at a point and $I$ is the intensity observed after the light has passed through  Now, we use this as a kernel weighting for the velocity to map it from 2D to 3D:
 \begin{equation}
-	v_{2D}(x,y) = \dfrac{\int_{z_-}^{z_+}v_{3D}(x,y,z)I(x,y,z)dz}{\int_{z_-}^{z_+}I(x,y,z)dz}
+	v^{2D}(x,y) = \dfrac{\int_{z_-}^{z_+}v^{3D}(x,y,z)I(x,y,z)dz}{\int_{z_-}^{z_+}I(x,y,z)dz}
 \end{equation}
+These formulae are discretized by treating the function $I_0$ as proportional to the the particle count in a single bin:
+\begin{gather}
+	v^{2D}_{i,j} = \dfrac{\sum_{k = 0}^{n_{bin}-1}v^{3D}_{i,j,k}w_{i,j,k}n_{i,j,k}}{\sum_{k = 0}^{n_{bin}-1}w_{i,j,k}n_{i,j,k}} \\
+	w_{i,j,k} = \textrm{exp}(-\kappa \dfrac{1}{(n_{pts}-1)} \sum_{l = k}^{n_{bin}-1} \dfrac{n_{i,j,l}}{dxdydz}dz )
+\end{gather}
+where $\kappa$ is the coefficent of opacity, $n_{bin}$ is the number of bins on one axis, $n_{pts}$ is the total number of particles (included for normalization purposes), and $dx, dy, dz$ are the dimensions of a single bin.
+
+
 
 % discretization
 
@@ -217,29 +225,40 @@ We will discuss the values used for $a$ and $b$ in the next section, along with 
 
 %Everything described up to this point can be found in the canonical Metropolis-Hastings algorithm; however, due to the chaotic nature of our error function, we decided to add some extra functionality to assist the convergence of the algorithm. In the canonical algorithm, the $\sigma$ values for the parameter perturbations are fixed, but 
 
-\subsection{Measuring Convergence}
+\subsection{Probablity of Convergence within $n$-Steps}
 One of the most important problems we faced was that of determining how well our method converges. We wanted a technique which would account for both how accurately and how quickly convergence occurs as we varied the magnitude of the initial perturbation. Our final product was a technique which could calculate the probability of convergence within a fixed number of steps given an initial perturbation.
 
-\subsubsection{Error vs. Parameters}
+Since MCMC methods are stochastic, individual runs tell us nothing about their convergence. We must run many tests and calculate statistics on the collective results. Therefore, our technique for testing consisted of running many instances of the MCMC, all with the same target and initial perturbation and calucating the percentage which converged (reached a minimum error threshold). This was done on a univariate basis by choosing an interval of evenly-spaced points centered on the target parameter value. The interval's width was chosen to be equal to the standard deviation of the top $25\%$ runs' value of that parameter. These points were then repeatedly used as the initial perturbation for the MCMC algorithm so as to calculate an approximation to the convergence probability. By calcuating this probability and plotting it over the interval, we can visually inspect how much the shape of the error curve impacts the rate of convergence, as well as compare the convergence of different parameters.
+
+
+	
+\section{Results}
+Intro...
+
+\subsection{Error vs. Parameters}
 We began with a univariate analysis of the error function, sampling it over an interval of equally-spaced points centered on the target's parameter value.
+
+During testing, our binning resolution ranged between 15$\times$15 to 54$\times$54 and particle numbers were between 1,000 and 10,000 per galaxy. 
 
 % plot with alpha, nBin, nPart...
 
-
-
-
-
 To measure the sensitivity, we sweep through a range of physically reasonable values for each the the parameters and calculate the fitness as a function fo the parameter's value.  The peak of the fitness function should occur when we have a perfect match.  
  
- Graham  - write this - picking the optimal and first step size for the MCMC
-
-\subsubsection{Probablity of Convergence within $n$-Steps}
+Graham  - write this - picking the optimal and first step size for the MCMC
 
 
-\section{Results}
-Since MCMC is stochastic, individual runs tell us nothing about its convergence. We must run many tests and calculate statistics on the collective results. Therefore, our method of testing consisted of running many instances of the MCMC in parallel, all with the same target and initial parameters, but allowing different paths through parameter space. We let the MCMC run for a fixed number of steps and determined if a run converged based on whether it reached a specified error threshold. We would then generate numerous plots and statistics with which we could determine how successful the runs were.
+\begin{figure}[!h]
+	\centering
+	
+	\begin{align*}
+		\includegraphics[scale = 0.37]{Error-Vz} & \includegraphics[scale = 0.37]{Error-Vz}
+	\end{align*}
+	\caption{Left: a per-particle image of a merger simulation. Right: a 50x50 square-binning of the left image (high-density regions are red and low-density regions are blue). Bottom: a 50x50 square-binning of the $z$-velocities.}
+\end{figure}
 
-During testing, our binning resolution ranged between 15$\times$15 to 54$\times$54 and particle numbers were between 1,000 and 10,000 per galaxy. 
+
+
+
 
 
 We will first consider the convergence using MCMC of a each parameter individually while holding the other values fixed.  
