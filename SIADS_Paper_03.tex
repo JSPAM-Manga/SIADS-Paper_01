@@ -119,6 +119,10 @@ The end goal of our research is to construct an automated pipeline which can com
 	\caption{Visible image ($512 \times 512$ pixels) and $z$-velocity ($54 \times 54$ pixels) of a merger observed by MaNGA.}
 \end{figure}
 
+
+% what order to put these next two paragraphs in???
+The MaNGA project in the Sloan Digital Sky Survey {\bf REFERENCE NEEDED} was designed specifcally to measure these quantities for real galaxies.  This project will sample the velocity fields for about 10,000 galaxies over its mission using integrated field spectroscopy.   Although most of the galaxies in the sample will not be gravitationally interacting with a neighbor, we expect to have a sample of a few hundred interacting systems within the next several years.   In addition to providing the velocity field, the mission also provides the ionization state for several different atomic species to allow measurements of quantites such as star formation rate, internal absorption, and temperature of the interstellar medium.
+
 \section{Methods}
 
 At its heart, a parameter estimation problem is essentially an optimization problem in which one minimizes a given error funciton w.r.t. a set of parameters. The two fundamental parts to the solution of such an optimization problem are 1) a meaningful error function and 2) a robust optimization algorithm. In this section, we will examine the reasoning behind the function we developed as well as the modifications we made to the canonical Metropolis-Hastings method.
@@ -167,11 +171,11 @@ Having binned the simulation, we have two grids representing the $x$-$y$ distrib
 \end{equation}
 where,
 \begin{equation}
-	OvrFrac = \dfrac{A_{X \cap X_0}}{A_{X}+A_{X_0}-A_{X \cap X_0}}
+	OvrFrac = \dfrac{|A(X) \cap A(X_0)|}{|A(X)|+|A(X_0)|-|A(X) \cap A(X_0)|}
 \end{equation}
 and
 \begin{equation}
-	RMSE^2 = \dfrac{1}{A_{X \cap X_0}}\sum_{i,j = 0}^{n_{bin}-1} w_{i,j}|v^{X}_{i,j}-v^{X_0}_{i,j}|^2
+	RMSE^2 = \dfrac{1}{|A(X) \cap A(X_0)|}\sum_{i,j = 0}^{n_{bin}-1} w_{i,j}(X)|v_{i,j}(X)-v_{i,j}(X_0)|^2
 \end{equation}
 
 % JW Note: 
@@ -181,15 +185,15 @@ and
 % I think this isn't a real problem for us because the Overlap fraction is always greater than 1 since we align the target galaxy to the 
 % same physical coordinates.   However, we should address this in the paper.
 
-In these equations, $X$, $X_0$, and $X \cap X_0$ are indices referring to the \textit{simulation}, \textit{target}, and their intersection, respectively.  So, $A_{X}$ is the number of \textit{simulation} bins with particles present, $A_{X_0}$ the number of \textit{target} bins, and $A_{X \cap X_0}$ the number of \textit{overlapping} bins they share. The overlap fraction, $OvrFrac$, is the fraction of bins/pixels/area in which both the simulation and the target have particles present. $RMSE$ is the weighted root-mean-squared error between the velocity fields only calculated over the overlapping bins and normalized by the number of overlapping bins (thus, $w_k = 1$ if the pixels overlap, $w_k = 0$ otherwise).
+In these equations, $X$ and $X_0$ are parameter strings that refer to the \textit{simulation} and \textit{target}, respectively.  The sets $A(X)$ and $A(X_0)$ contain all the bins that have particles present, and their cardinalities equal the number of bins in these sets.  Therefore,  $|A(X) \cap A(X_0)|$
+equals the number of \textit{overlapping} bins they share. The overlap fraction, $OvrFrac$, is the fraction of bins in which both the simulation and the target have particles present. $RMSE$ is the weighted root-mean-squared error between the velocity fields only calculated over the overlapping bins and normalized by the number of overlapping bins (thus, $w_{i,j} = 1$ if the pixels overlap, $w_{i,j} = 0$ otherwise).
 
 We experimented with different weighting schemes...
 
-% what order to put these next two paragraphs in???
-Although this weighting system is not perfect, it works adequately for systems where was have a measured velocity across the interacting galaxy system.  The MaNGA project in the Sloan Digital Sky Survey {\bf REFERENCE NEEDED} was designed specifcally to measure these quantities for real galaxies.  This project will sample the velocity fields for about 10,000 galaxies over its mission using integrated field spectroscopy.   Although most of the galaxies in the sample will not be gravitationally interacting with a neighbor, we expect to have a sample of a few hundred interacting systems within the next several years.   In addition to providing the velocity field, the mission also provides the ionization state for several different atomic species to allow measurements of quantites such as star formation rate, internal absorption, and temperature of the interstellar medium. 
+Although this weighting system is not perfect, it works adequately for systems where was have a measured velocity across the interacting galaxy system and is consistent with the type of data available
+from MaNGA.
 
-% converse is the wrong word
-It is important to have both the overlap and RMSE terms in the function. Consider the fact that morphologically similar mergers will have have high overlap and low velocity error, but the converse of this statement is not necessarily true. If the overlap is high, there is a proability that the velocity error could still be large, or vice versa. This probability is decreased if we include both velocity and overlap in the calculation.
+
 
 \subsection{Adaptive Metropolis-Hastings}
 
@@ -226,8 +230,12 @@ and $0<a,b<1$. These two factors serve to alternate between increasing, decreasi
 \subsection{Probablity of Convergence within $n$-Steps}
 One of the most important problems we faced was that of determining how well our method converges. We wanted a technique which would account for both how accurately and how quickly convergence occurs as we varied the magnitude of the initial perturbation. Our final product was a technique which could calculate the probability of convergence within a fixed number of steps given an initial perturbation.
 
-Since MCMC methods are stochastic, individual runs tell us nothing about their convergence. We must run many tests and calculate statistics on the collective results. Therefore, our technique for testing consisted of running many instances of the MCMC, all with the same target and initial perturbation and calucating the percentage which converged (reached a minimum error threshold) so as to calculate an approximation to the convergence probability. This was done on a univariate basis by choosing an interval of evenly-spaced points centered on the target parameter value. The interval's width was chosen to be equal to the standard deviation of the top $25\%$ runs' value of that parameter. These points were then repeatedly used as the initial perturbation for the MCMC algorithm. By calcuating this probability and plotting it over the interval, we can visually inspect how much the shape of the error curve impacts the rate of convergence, as well as compare the convergence of different parameters.
+Since MCMC methods are stochastic, individual runs tell us nothing about their convergence. We must run many tests and calculate statistics on the collective results. Therefore, our technique for testing consisted of running many instances of the MCMC, all with the same target and initial perturbation and calculating the percentage which converged (reached a minimum error threshold) so as to calculate an approximation to the convergence probability. This was done on a univariate basis by choosing an interval of evenly-spaced points centered on the target parameter value. 
+The interval widths used in our analysis were created by analyzing the best models from the {\it Galaxy Zoo: Mergers} project.  We took the top $25\%$ of the models for the target system and found the standard deviation for each parameter.   We then doubled the standard deviations for each these parameters and used them as our interval widths.  Since the top $25\%$ models from {\it Galaxy Zoo: Mergers} represent a human-determined consensus of reasonably good fits to the morphology of the system, the interval widths we used are likely to produce models that are morphologically similar to our target galaxy (even if the parameters were not actually in the Galaxy Zoo: Mergers set).
+These points were then repeatedly used as the initial perturbation for the MCMC algorithm. By calculating this probability and plotting it over the interval, we can visually inspect how much the shape of the error curve impacts the rate of convergence, as well as compare the convergence of different parameters.  
 
+
+%The interval's width was chosen to be equal to the twice the standard deviation of top $25\%$ runs' value of that parameter taken from the ranked states in the Merger Zoo Project.  These top $25\%$ runs represent a human-determined consensus of reasonably good fits to the morphology of the system.
 
 	
 \section{Results}
@@ -257,6 +265,9 @@ Graham  - write this - picking the optimal and first step size for the MCMC
 \end{figure}
 
 
+
+% converse is the wrong word
+It is important to have both the overlap and RMSE terms in the function. Consider the fact that morphologically similar mergers will have have high overlap and low velocity error, but the converse of this statement is not necessarily true. If the overlap is high, there is a probability that the velocity error could still be large, or vice versa. This probability is decreased if we include both velocity and overlap in the calculation.
 
 
 
