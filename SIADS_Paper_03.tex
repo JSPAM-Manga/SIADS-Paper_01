@@ -167,11 +167,11 @@ Having binned the simulation, we have two grids representing the $x$-$y$ distrib
 \end{equation}
 where,
 \begin{equation}
-	OvrFrac = \dfrac{A_{X \cap X_0}}{A_{X}+A_{X_0}-A_{X \cap X_0}}
+	OvrFrac = \dfrac{|A(X) \cap A(X_0)|}{|A(X)|+|A(X_0)|-|A(X) \cap A(X_0)|}
 \end{equation}
 and
 \begin{equation}
-	RMSE^2 = \dfrac{1}{A_{X \cap X_0}}\sum_{i,j = 0}^{n_{bin}-1} w_{i,j}|v^{X}_{i,j}-v^{X_0}_{i,j}|^2
+	RMSE^2 = \dfrac{1}{|A(X) \cap A(X_0)|}\sum_{i,j = 0}^{n_{bin}-1} w_{i,j}|v_{i,j}^{2D}(X)-v_{i,j}^{2D}(X_0)|^2
 \end{equation}
 
 % JW Note: 
@@ -181,7 +181,7 @@ and
 % I think this isn't a real problem for us because the Overlap fraction is always greater than 1 since we align the target galaxy to the 
 % same physical coordinates.   However, we should address this in the paper.
 
-In these equations, $X$, $X_0$, and $X \cap X_0$ are indices referring to the \textit{simulation}, \textit{target}, and their intersection, respectively.  So, $A_{X}$ is the number of \textit{simulation} bins with particles present, $A_{X_0}$ the number of \textit{target} bins, and $A_{X \cap X_0}$ the number of \textit{overlapping} bins they share. The overlap fraction, $OvrFrac$, is the fraction of bins/pixels/area in which both the simulation and the target have particles present. $RMSE$ is the weighted root-mean-squared error between the velocity fields only calculated over the overlapping bins and normalized by the number of overlapping bins (thus, $w_k = 1$ if the pixels overlap, $w_k = 0$ otherwise).
+In these equations, $X$ and $X_0$ are arguments referring to the \textit{simulation} and \textit{target}, respectively, and $A(\cdot)$ is a function which returns a set of bins from an image of the simulation or target. Consquently, $A(X) \cap A(X_0)$ referrs to the set of bins in which both the simulation and target have particles present and $|A|$ simply refers to the cardinality of the set. The overlap fraction, $OvrFrac$, is the fraction of bins in which both the simulation and the target have particles present. $RMSE$ is the weighted root-mean-squared error between the velocity fields only calculated over the overlapping bins and normalized by the number of overlapping bins (thus, $w_k = 1$ if the pixels overlap, $w_k = 0$ otherwise).
 
 We experimented with different weighting schemes...
 
