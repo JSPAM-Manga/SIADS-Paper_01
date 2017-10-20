@@ -123,13 +123,14 @@ The end goal of our research is to construct an automated pipeline which can com
 
 \section{Methods}
 
-At its heart, a parameter estimation problem is essentially an optimization problem in which one minimizes a given error funciton w.r.t. a set of parameters. The two fundamental parts to the solution of such an optimization problem are 1) a meaningful error function and 2) a robust optimization algorithm. In this section, we will examine the reasoning behind the function we developed as well as the modifications we made to the canonical Metropolis-Hastings method.
+At its heart, a parameter estimation problem is essentially an optimization problem in which one minimizes a given error funciton w.r.t. a set of parameters. The two fundamental parts to the solution of such an optimization problem are 1) a method to visualize the simulations   2) a meaningful error function and 3) a robust optimization algorithm. In this section, we will examine the reasoning behind the function we developed as well as the modifications we made to the canonical Metropolis-Hastings method.
 
-\subsection{Error Function}
+\subsection{Visualizing the Galaxy}}
 
 There are essentially two types of information which our error function must capture: particle positions and velocities. Obviously, however, we can't evalute our function on a per-particle basis because--among many reasons--once we begin using real merger targets, we will not have per-star information. It was very important that we kept the context of real merger targets in our minds as we experimented with different functions because whatever we decided on in the testing phase must still be applicable to real targets. Fortunately, this restriction led us to an elegant solution to the problem. The MaNGA data is in the format of a $54 \times 54$ image for the $z$-velocity and a $512 \times 512$ image for visible light intensity. Therefore, simply binning the particle number and $z$-velocity of a simulation will give us an equivalent format.
 
-% mention alignment
+In the original {\it Galaxy Zoo: Mergers} project, the center of mass positions of the two galaxies was measured directly from astronomical images.  This measurement provides on of the constraints on our models.  The centroids of our simulations will always align with the galaxies.
+% mention alignment - done
 
 Binning the particle number is trivial; however, when binning the $z$-velocity, we must account for the opacity of gas and dust within the galaxies. To do so, we bin the velocities in 3D, averageing the values of all the particles within each bin to get its value. The equation which governs the decrease in intensity of light as it passes through a medium of density $\rho$ from $z_-$ to $z_+$ is:
 \begin{equation}
@@ -144,7 +145,7 @@ These formulae are discretized by treating the function $I_0$ as proportional to
 	v^{2D}_{i,j} = \dfrac{\sum_{k = 0}^{n_{bin}-1}v^{3D}_{i,j,k}n_{i,j,k}w_{i,j,k}}{\sum_{k = 0}^{n_{bin}-1}n_{i,j,k}w_{i,j,k}} \\
 	w_{i,j,k} = \textrm{exp}(-\kappa \sum_{l = k}^{n_{bin}-1} \dfrac{n_{i,j,l}/n_{pts}}{dxdydz}dz )
 \end{gather}
-where $n_{bin}$ is the number of bins on one axis, $n_{pts}$ is the total number of particles (included for normalization purposes), and $dx, dy, dz$ are the dimensions of a single bin.
+where $n_{bin}$ is the number of bins on one axis, $n_{pts}$ is the total number of particles (included for normalization purposes), and $dx, dy, dz$ are the dimensions of a single bin.  We have aalso moved from a continuous representation of the system using $x, y, z$ to using the indexes of the bin at  $i, j, k$.  Thus the variable $v_{i,j,k}$ is the mean velocity of the particles in the bin at $x_i, y_j, z_k$ and $n_{ijk}$ is the number of particles within this bin.
 
 % need to say what v_ijk and n_ijk are?
 
@@ -162,6 +163,8 @@ where $n_{bin}$ is the number of bins on one axis, $n_{pts}$ is the total number
 % plot to demonstrate opacity vs no opacity
 
 % differentiate between the intensity of light generated at a point versus that obsevered after opacity
+
+\subsection{The Error Function}
 
 Having binned the simulation, we have two grids representing the $x$-$y$ distribution of particle density and $z$-velocity. We now divide the error function into two parts, one representing the similarity of the mergers' particle distributions and the other the RMS error of the $z$-velocities between them:
 \begin{equation}
