@@ -80,6 +80,8 @@ This code makes several significant simplifications for the sake of runtime, but
 %(say field or potential?)
 around the center of masses of the galaxies are spherically symmetric.  These fields are modeled after the disk, bulge and halo potential described by Hernquist (1988?) used to model the self-consistent gravitational fields of disk galaxies.
 
+Say the mass ratio is prim/sec
+
 The reference frame of the simulation is setup so that one galaxy (called the primary) is initially at the origin with zero velocity and the other galaxy (called the secondary) is given a relative position and velocity.  The equation that describes the acceleration of the ith particle is at position $r_i$ is:
 % big equation needed here
 \begin{equation}
@@ -133,7 +135,7 @@ Binning the particle number is trivial; however, when binning the $z$-velocity, 
 \begin{equation}
 	I(x,y,z_-,z_+) = I_0(x,y,z_-) \textrm{\hspace{2pt}exp}(-\kappa \int_{z_-}^{z_+} \rho(x,y,z') dz')
 \end{equation}
-where $I_0$ is the the actual intensity of light generated at a point and $I$ is the intensity observed after the light has passed through  Now, we use this as a kernel weighting for the velocity to map it from 2D to 3D:
+where $\kappa$ is the coefficent of opacity, $I_0$ is the the actual intensity of light generated at a point, and $I$ is the intensity observed after the light has passed through the medium. Now, we use this as a kernel weighting for the velocity to map it from 2D to 3D:
 \begin{equation}
 	v^{2D}(x,y) = \dfrac{\int_{z_-}^{z_+}v^{3D}(x,y,z)I(x,y,z,z_+)dz}{\int_{z_-}^{z_+}I(x,y,z,z_+)dz}
 \end{equation}
@@ -142,7 +144,7 @@ These formulae are discretized by treating the function $I_0$ as proportional to
 	v^{2D}_{i,j} = \dfrac{\sum_{k = 0}^{n_{bin}-1}v^{3D}_{i,j,k}n_{i,j,k}w_{i,j,k}}{\sum_{k = 0}^{n_{bin}-1}n_{i,j,k}w_{i,j,k}} \\
 	w_{i,j,k} = \textrm{exp}(-\kappa \sum_{l = k}^{n_{bin}-1} \dfrac{n_{i,j,l}/n_{pts}}{dxdydz}dz )
 \end{gather}
-where $\kappa$ is the coefficent of opacity, $n_{bin}$ is the number of bins on one axis, $n_{pts}$ is the total number of particles (included for normalization purposes), and $dx, dy, dz$ are the dimensions of a single bin.
+where $n_{bin}$ is the number of bins on one axis, $n_{pts}$ is the total number of particles (included for normalization purposes), and $dx, dy, dz$ are the dimensions of a single bin.
 
 % need to say what v_ijk and n_ijk are?
 
@@ -183,7 +185,11 @@ and
 
 In these equations, $X$ and $X_0$ are arguments referring to the \textit{simulation} and \textit{target}, respectively, and $A(\cdot)$ is a function which returns a set of bins from an image of the simulation or target. Consquently, $A(X) \cap A(X_0)$ referrs to the set of bins in which both the simulation and target have particles present and $|A|$ simply refers to the cardinality of the set. The overlap fraction, $OvrFrac$, is the fraction of bins in which both the simulation and the target have particles present. $RMSE$ is the weighted root-mean-squared error between the velocity fields only calculated over the overlapping bins and normalized by the number of overlapping bins (thus, $w_k = 1$ if the pixels overlap, $w_k = 0$ otherwise).
 
-We experimented with different weighting schemes...
+After experimenting with different weighting schemes, we derived one that is able to emphasize regions of the mergers which have been heavily affected by tidal forces producing noticable morphological features:
+\begin{equation}
+	w_{i,j} = \dfrac{1}{N}\left(\dfrac{n_{i,j}}{n_{max}} + \dfrac{\hat{n}_{i,j}}{\hat{n}_{max}}\right)\left(\dfrac{n_{i,j} - \hat{n}_{i,j}}{n_{i,j} + \hat{n}_{i,j}}\right)^2
+\end{equation}
+where $N$ is a normalization constant, $n_{i,j}$ is the number of particles in a normal simulation bin, and $\hat{n}_{i,j}$ is the number of particles in a bin from a simulation in which we don't take into account gravitational effects between the two galaxies (essentially placing two perfect spiral galaxies at the final position of the simulation). This lets us determine what work was actually done by the tidal forces to alter the morphology of the merger.
 
 % what order to put these next two paragraphs in???
 Although this weighting system is not perfect, it works adequately for systems where was have a measured velocity across the interacting galaxy system.  The MaNGA project in the Sloan Digital Sky Survey {\bf REFERENCE NEEDED} was designed specifcally to measure these quantities for real galaxies.  This project will sample the velocity fields for about 10,000 galaxies over its mission using integrated field spectroscopy.   Although most of the galaxies in the sample will not be gravitationally interacting with a neighbor, we expect to have a sample of a few hundred interacting systems within the next several years.   In addition to providing the velocity field, the mission also provides the ionization state for several different atomic species to allow measurements of quantites such as star formation rate, internal absorption, and temperature of the interstellar medium. 
@@ -226,17 +232,40 @@ and $0<a,b<1$. These two factors serve to alternate between increasing, decreasi
 \subsection{Probablity of Convergence Within $n$-Steps}
 One of the most important problems we faced was that of determining how well our method converges. We wanted a technique which would account for both how accurately and how quickly convergence occurs as we varied the magnitude of the initial perturbation. Our final product was a technique which could calculate the probability of convergence within a fixed number of steps given an initial perturbation.
 
-Since MCMC methods are stochastic, individual runs tell us nothing about their convergence. We must run many tests and calculate statistics on the collective results. Therefore, our technique for testing consisted of running many instances of the MCMC, all with the same target and initial perturbation and calucating the percentage which converged (i.e., reached a minimum error threshold) so as to calculate an approximation to the convergence probability. This was done on a univariate basis by choosing an interval of evenly-spaced points centered on the target parameter value. The interval's width was chosen to be equal to twice the standard deviation of the top $25\%$ runs' value of that parameter. These points were then repeatedly used as the initial perturbation for the MCMC algorithm. By calcuating this probability and plotting it over the interval, we can visually inspect how much the shape of the error curve impacts the rate of convergence, as well as compare the convergence of different parameters.
+Since MCMC methods are stochastic, individual runs tell us nothing about their convergence. We must run many tests and calculate statistics on the collective results. Therefore, our technique for testing consisted of running many instances of the MCMC, all with the same target and initial perturbation and calucating the percentage which converged (i.e., reached a minimum error threshold) so as to calculate an approximation to the convergence probability. This was done on a univariate basis by choosing an interval of evenly-spaced points centered on the target parameter value. The interval's width was chosen to be equal to twice the standard deviation of the top $25\%$ runs' value of that parameter. These points were then repeatedly used as the initial perturbation for the MCMC algorithm. By calcuating this probability and plotting it over the interval, we can visually inspect how much the shape of the error curve impacts the rate of convergence, as well as compare the convergence of different parameters. 
 
 
 	
 \section{Results}
-Intro...
+There are several key points concerning different aspects of process which we must discuss before moving on to our results. First--concerning the particle distibution of the galaxies in the simulations--though the true galactic mass distribution is closer to an exponential decay as the radius increases, we chose a uniform density over the whole galaxy so that variations in density would be solely due to tidal disturbances rather than an inherent property of the galaxies, making our weighting scheme much more meaningful.
+
+Second--concerning image resolution in light of bin and particle numbers--clearly the more bins, the more precision with which we can measure the error. However, to ensure that there aren't any false empty bins, this requires more particles, i.e., longer simulation time. To achieve a balance between precision and runtime during testing, we broke up our testing into two main regimes: 1,000 particles per galaxy with $15 \times 15$ bins, and 10,000 particles per galaxy and $54 \times 54$ bins (this is the resolution of the MaNGA data). We would quickly test new modifications to our methods with low precision, but then collect data with high precision.
+
+Lastly--concerning the code itself--while the JSPAM code is written in Fortran, the entirety of the MCMC code is written in Python and parallelized with p-threads in C++. It is organized as follows: There is a top-level Python script which determines which points over the interval to choose as the intial parameters for the MCMC's. This script then calls parallelized C++ code which runs a set number of MCMC trials (written in another Python sciprt) per point. This MCMC script then calls the Fortran JSPAM code which performs a simulation and outputs the particle positions and velocities to a file. These files are used to compute the error at each step. In the end, the MCMC script outputs the Markov chain produced. Finally, by analyzing all of the Markvo chains collectively, we calulate the convergence probabilities.
+\begin{figure}[!h]
+	\centering
+	\includegraphics[scale = 0.5]{Workflow_02}
+	\caption{Workflow.}
+\end{figure}
+
+\subsection{Example: Heart-shaped galaxy}
+Describe the galaxy we are modeling
+%JW write this
+Interacting ring galaxy - di
+- number of models that were run by volunteers
+- number of "good models"
+- fitness function results 
+- issues with the best fit
+- real velocity field has been observed by MaNGA
+
+For our purposes, we will use the best fit model as our target system rather than the observations.  This allows us to do additional sampling and to know the exact dynamical parameters. 
+
+
 
 \subsection{Error vs. Parameters}
 We began with a univariate analysis of the error function, sampling it over the interval dsecribed in section 2.3.  The following plots illustrate the error function's dependence on the 12 parameters. Notice how the minimum is located in the center of the interval, coincident with the target's parameter value.
 
-\begin{table}
+\begin{table}[!h]
 \begin{center}
 	\begin{tabular}{ | c || c | c | c | c | }
 		\hline
@@ -278,60 +307,33 @@ We began with a univariate analysis of the error function, sampling it over the 
 	\centering
 	
 	\begin{align*}
-		\includegraphics[scale = 0.25]{Error-z-Error} & \includegraphics[scale = 0.25]{Error-vx-Error} & \includegraphics[scale = 0.25]{Error-vy-Error}\\
-		\includegraphics[scale = 0.25]{Error-vz-Error} & \includegraphics[scale = 0.25]{Error-massRatio-Error} &\includegraphics[scale = 0.25]{Error-totalMass-Error} \\
+		\includegraphics[scale = 0.25]{Error-z} & \includegraphics[scale = 0.25]{Error-vx} & \includegraphics[scale = 0.25]{Error-vy}\\
+		\includegraphics[scale = 0.25]{Error-vz} & \includegraphics[scale = 0.25]{Error-massRatio} &\includegraphics[scale = 0.25]{Error-totalMass}\\
+		\includegraphics[scale = 0.25]{Error-radPrim} & \includegraphics[scale = 0.25]{Error-radSec} & \includegraphics[scale = 0.25]{Error-phiPrim}\\
+		\includegraphics[scale = 0.25]{Error-phiSec} & \includegraphics[scale = 0.25]{Error-thetaPrim} &\includegraphics[scale = 0.25]{Error-thetaSec}\\
 	\end{align*}
 	\caption{Plots.}
 %	plot with alpha, nBin, nPart...
 %	During testing, our binning resolution ranged between 15$\times$15 to 54$\times$54 and particle numbers were between 1,000 and 10,000 per galaxy. 
 \end{figure}
 
+Notice how the prim/sec's (one of them) variance in error tends to be much larger than the other. This is because thhe prim is the one that is nearer to the observer and thus blocks the view of the other one. Were the opacity coefficient lowered, this effect would be reduced and the galaxies would have more similar error profiles.
 
 
-Notice how the prim/sec's (one of them) variance in error tends to be much larger than the other. This is because that galaxies is the one that is nearer to the observer and thus blocks the view of the other one. Were the opacity coefficient lowered, this effect would be reduced and the galaxies would have more similar error profiles.
+\subsection{Physical Convergence - what does it look like?}
+Before examining the statistical results from our convergence tests, let's look at pretty pictures.
 
 
-\subsection{Example 1 - Heart shaped galaxy}
-Describe the galaxy we are modeling
-%JW write this
-Interacting ring galaxy - di
-- number of models that were run by volunteers
-- number of "good models"
-- fitness function results 
-- issues with the best fit
-- real velocity field has been observed by MaNGA
 
-For our purposes, we will use the best fit model as our target system rather than the observations.  This allows us to do additional sampling and to know the exact dynamical parameters. 
-
-
-To ex
+Density/velocity heat maps, scatter plots
  
  
- 
- \subsection{Convergence Probabilities}
 
- MCMC plots 
  
- \subsection{Physical Convergence - what does it look like?}
-  
- Density/velocity heat maps, scatter plots
- 
- 
- 
-\subsection{Example 2}
+\subsection{Convergence Probabilities}
 
-\subsubsection{parameter values}
+MCMC plots 
 
-To measure the sensitivity, we sweep through a range of physically reasonable values for each the the parameters and calculate the fitness as a function fo the parameter's value.  The peak of the fitness function should occur when we have a perfect match.  
- 
- For this galaxies, we list the values we are using along with the range allowed in the models.
- Make a table
- parameter 1, actual value, minimum value, maximum value.
- parameter 2, actual value, minimum value, maximum value.
- parameter 3, actual value, minimum value, maximum value.
- parameter 4, actual value, minimum value, maximum value.
- parameter 5, actual value, minimum value, maximum value.
- 
 
 \section{Analysis}
 
