@@ -3,15 +3,14 @@
 \BOOKMARK [2][-]{subsection.6}{Galaxy Zoo: Mergers and Merger Wars}{section.1}% 3
 \BOOKMARK [2][-]{subsection.7}{SDSS and MaNGA}{section.1}% 4
 \BOOKMARK [1][-]{section.10}{Methods}{}% 5
-\BOOKMARK [2][-]{subsection.11}{Error Function}{section.10}% 6
-\BOOKMARK [2][-]{subsection.23}{Adaptive Metropolis-Hastings}{section.10}% 7
-\BOOKMARK [2][-]{subsection.31}{Probablity of Convergence Within n-Steps}{section.10}% 8
-\BOOKMARK [1][-]{section.32}{Results}{}% 9
-\BOOKMARK [2][-]{subsection.33}{Error vs. Parameters}{section.32}% 10
-\BOOKMARK [2][-]{subsection.38}{Example 1 - Heart shaped galaxy}{section.32}% 11
-\BOOKMARK [2][-]{subsection.39}{Convergence Probabilities}{section.32}% 12
-\BOOKMARK [2][-]{subsection.40}{Physical Convergence - what does it look like?}{section.32}% 13
-\BOOKMARK [2][-]{subsection.41}{Example 2}{section.32}% 14
-\BOOKMARK [3][-]{subsubsection.42}{parameter values}{subsection.41}% 15
-\BOOKMARK [1][-]{section.43}{Analysis}{}% 16
-\BOOKMARK [1][-]{section.44}{Conclusions}{}% 17
+\BOOKMARK [2][-]{subsection.11}{Visualizing the Galaxy}{section.10}% 6
+\BOOKMARK [2][-]{subsection.20}{The Error Function}{section.10}% 7
+\BOOKMARK [2][-]{subsection.25}{Adaptive Metropolis-Hastings}{section.10}% 8
+\BOOKMARK [2][-]{subsection.33}{Probablity of Convergence Within n-Steps}{section.10}% 9
+\BOOKMARK [1][-]{section.34}{Results}{}% 10
+\BOOKMARK [2][-]{subsection.37}{Example: Heart-shaped galaxy}{section.34}% 11
+\BOOKMARK [2][-]{subsection.38}{Error vs. Parameters}{section.34}% 12
+\BOOKMARK [2][-]{subsection.43}{Physical Convergence - what does it look like?}{section.34}% 13
+\BOOKMARK [2][-]{subsection.44}{Convergence Probabilities}{section.34}% 14
+\BOOKMARK [1][-]{section.45}{Analysis}{}% 15
+\BOOKMARK [1][-]{section.46}{Conclusions}{}% 16
