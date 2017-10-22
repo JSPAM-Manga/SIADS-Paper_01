@@ -65,7 +65,7 @@ non-linear dynamics, cosmology, MCMC, galaxy mergers, simulation, optimization
 \section{Introduction}
 Understanding the morphology and evolution of galactic mergers is a central issue in contemporary astrophysicis--in particular, the inverse problem of tracing a merger back in time to determine its dynamical history. Due to the highly non-linear nature of galactic systems as well as limited observational knowledge of a given system's current state, this problem cannot be solved by simply reversing time in an N-body simulation, necessitating the use search algorithms which require a great number of merger simulations to fully explore the parameter space.
 
-In order to resolve this problem, we need three things: 1) a fast simulation code, 2) an error function which accurately measures the differences between two mergers, and 3) an optimization algorithm which can minimize that error function. Step 1 was completed by Wallin et al. \cite{jspam} with the development of the simulation code entitled JSPAM. Steps 2 and 3 both will be described in this paper since an optimization problem is intimiately linked to its error function.
+In order to resolve this problem, we need three things: 1) a fast simulation code, 2) an error function which accurately measures the differences between two mergers, and 3) an optimization algorithm which can minimize that error function. Step 1 was completed by Wallin et al. \cite{jspam} with the development of the simulation code entitled JSPAM. Steps 2 and 3 both will be described in this paper since an optimization problem is intimately linked to its error function.
 
 %(Throughout this paper, we will speak of \textit{minimizing} the fitness function since it is in the form of an error function, i.e., a low value means a high fitness.) 
 
@@ -127,20 +127,20 @@ At its heart, a parameter estimation problem is essentially an optimization prob
 
 \subsection{Visualizing the Galaxy}
 
-There are essentially two types of information which our error function must capture: particle positions and velocities. Obviously, however, we can't evalute our function on a per-particle basis because--among many reasons--once we begin using real merger targets, we will not have per-star information. It was very important that we kept the context of real merger targets in our minds as we experimented with different functions because whatever we decided on in the testing phase must still be applicable to real targets. Fortunately, this restriction led us to an elegant solution to the problem. The MaNGA data is in the format of a $54 \times 54$ image for the $z$-velocity and a $512 \times 512$ image for visible light intensity. Therefore, simply binning the particle number and $z$-velocity of a simulation will give us an equivalent format.
+There are essentially two types of information which our error function must capture: particle positions and velocities. Obviously, however, we can't evaluate our function on a per-particle basis because--among many reasons--once we begin using real merger targets, we will not have per-star information. It was very important that we kept the context of real merger targets in our minds as we experimented with different functions because whatever we decided on in the testing phase must still be applicable to real targets. Fortunately, this restriction led us to an elegant solution to the problem. The MaNGA data is in the format of a $54 \times 54$ image for the $z$-velocity and a $512 \times 512$ image for visible light intensity. Therefore, simply binning the particle number and $z$-velocity of a simulation will give us an equivalent format.
 
 In the original {\it Galaxy Zoo: Mergers} project, the center of mass positions of the two galaxies were measured directly from astronomical images.  This measurement insures that the centroids of our simulations will align with the target galaxies from these images.
 % mention alignment - done
 
-Binning the particle number is trivial; however, when binning the $z$-velocity, we must account for the opacity of gas and dust within the galaxies. To do so, we bin the velocities in 3D, averageing the values of all the particles within each bin to get its value. The equation which governs the decrease in intensity of light as it passes through a medium of density $\rho$ from $z_-$ to $z_+$ is:
+Binning the particle number is trivial; however, when binning the $z$-velocity, we must account for the opacity of gas and dust within the galaxies. To do so, we bin the velocities in 3D, averaging the values of all the particles within each bin to get its value. The equation which governs the decrease in intensity of light as it passes through a medium of density $\rho$ from $z_-$ to $z_+$ is:
 \begin{equation}
 	I(x,y,z_-,z_+) = I_0(x,y,z_-) \textrm{\hspace{2pt}exp}(-\kappa \int_{z_-}^{z_+} \rho(x,y,z') dz')
 \end{equation}
-where $\kappa$ is the coefficent of opacity, $I_0$ is the the actual intensity of light generated at a point, and $I$ is the intensity observed after the light has passed through the medium. Now, we use this as a kernel weighting for the velocity to map it from 2D to 3D:
+where $\kappa$ is the coefficient of opacity, $I_0$ is the actual intensity of light generated at a point, and $I$ is the intensity observed after the light has passed through the medium. Now, we use this as a kernel weighting for the velocity to map it from 2D to 3D:
 \begin{equation}
 	v^{2D}(x,y) = \dfrac{\int_{z_-}^{z_+}v^{3D}(x,y,z)I(x,y,z,z_+)dz}{\int_{z_-}^{z_+}I(x,y,z,z_+)dz}
 	\end{equation}
-We will now move from a continuous representation of the system using $x, y, z$ to a discrete representation using the indices   $i, j, k$.   Thus, the variable $v_{i,j,k}$ is the mean velocity of the particles  and $n_{i,j,k}$ is the particle count in the bin located at $x_i, y_j, z_k$.  We will also treat the function $I_0$ as proportional to the the particle count $n$ in a single bin:
+We will now move from a continuous representation of the system using $x, y, z$ to a discrete representation using the indices   $i, j, k$.   Thus, the variable $v_{i,j,k}$ is the mean velocity of the particles  and $n_{i,j,k}$ is the particle count in the bin located at $x_i, y_j, z_k$.  We will also treat the function $I_0$ as proportional to the particle count $n$ in a single bin:
 \begin{gather}
 	v^{2D}_{i,j} = \dfrac{\sum_{k = 0}^{n_{bin}-1}v^{3D}_{i,j,k}n_{i,j,k}w_{i,j,k}}{\sum_{k = 0}^{n_{bin}-1}n_{i,j,k}w_{i,j,k}} \\
 	w_{i,j,k} = \textrm{exp}(-\kappa \sum_{l = k}^{n_{bin}-1} \dfrac{n_{i,j,l}/n_{pts}}{dxdydz}dz )
@@ -161,7 +161,7 @@ where $n_{bin}$ is the number of bins on one axis, $n_{pts}$ is the total number
 
 % plot to demonstrate opacity vs no opacity
 
-% differentiate between the intensity of light generated at a point versus that obsevered after opacity
+% differentiate between the intensity of light generated at a point versus that observed after opacity
 
 \subsection{The Error Function}
 
@@ -185,33 +185,33 @@ and
 % I think this isn't a real problem for us because the Overlap fraction is always greater than 1 since we align the target galaxy to the 
 % same physical coordinates.   However, we should address this in the paper.
 
-In these equations, $X$ and $X_0$ are arguments referring to the \textit{simulation} and \textit{target}, respectively, and $A(\cdot)$ is a function which returns a set of bins from an image of the simulation or target. Consquently, $A(X) \cap A(X_0)$ referrs to the set of bins in which both the simulation and target have particles present and $|A|$ simply refers to the cardinality of the set. The overlap fraction, $OvrFrac$, is the fraction of bins in which both the simulation and the target have particles present. $RMSE$ is the weighted root-mean-squared error between the velocity fields only calculated over the overlapping bins and normalized by the number of overlapping bins (thus, $w_k = 1$ if the pixels overlap, $w_k = 0$ otherwise).
+In these equations, $X$ and $X_0$ are arguments referring to the \textit{simulation} and \textit{target}, respectively, and $A(\cdot)$ is a function which returns a set of bins from an image of the simulation or target. Consequently, $A(X) \cap A(X_0)$ refers to the set of bins in which both the simulation and target have particles present and $|A|$ simply refers to the cardinality of the set. The overlap fraction, $OvrFrac$, is the fraction of bins in which both the simulation and the target have particles present. $RMSE$ is the weighted root-mean-squared error between the velocity fields only calculated over the overlapping bins and normalized by the number of overlapping bins (thus, $w_k = 1$ if the pixels overlap, $w_k = 0$ otherwise).
 
-After experimenting with different weighting schemes, we derived one that is able to emphasize regions of the mergers which have been heavily affected by tidal forces producing noticable morphological features:
+After experimenting with different weighting schemes, we derived one that is able to emphasize regions of the mergers which have been heavily affected by tidal forces producing noticeable morphological features:
 \begin{equation}
 	w_{i,j} = \dfrac{1}{N}\left(\dfrac{n_{i,j}}{n_{max}} + \dfrac{\hat{n}_{i,j}}{\hat{n}_{max}}\right)\left(\dfrac{n_{i,j} - \hat{n}_{i,j}}{n_{i,j} + \hat{n}_{i,j}}\right)^2
 \end{equation}
 where $N$ is a normalization constant, $n_{i,j}$ is the number of particles in a normal simulation bin, and $\hat{n}_{i,j}$ is the number of particles in a bin from a simulation in which we don't take into account gravitational effects between the two galaxies (essentially placing two perfect spiral galaxies at the final position of the simulation). This lets us determine what work was actually done by the tidal forces to alter the morphology of the merger.
 
 % what order to put these next two paragraphs in???
-Although this weighting system is not perfect, it works adequately for systems where was have a measured velocity across the interacting galaxy system.  The MaNGA project in the Sloan Digital Sky Survey {\bf REFERENCE NEEDED} was designed specifcally to measure these quantities for real galaxies.  This project will sample the velocity fields for about 10,000 galaxies over its mission using integrated field spectroscopy.   Although most of the galaxies in the sample will not be gravitationally interacting with a neighbor, we expect to have a sample of a few hundred interacting systems within the next several years.   In addition to providing the velocity field, the mission also provides the ionization state for several different atomic species to allow measurements of quantites such as star formation rate, internal absorption, and temperature of the interstellar medium. 
+Although this weighting system is not perfect, it works adequately for systems where was have a measured velocity across the interacting galaxy system.  The MaNGA project in the Sloan Digital Sky Survey {\bf REFERENCE NEEDED} was designed specifically to measure these quantities for real galaxies.  This project will sample the velocity fields for about 10,000 galaxies over its mission using integrated field spectroscopy.   Although most of the galaxies in the sample will not be gravitationally interacting with a neighbor, we expect to have a sample of a few hundred interacting systems within the next several years.   In addition to providing the velocity field, the mission also provides the ionization state for several different atomic species to allow measurements of quantities such as star formation rate, internal absorption, and temperature of the interstellar medium. 
 
 % converse is the wrong word
-It is important to have both the overlap and RMSE terms in the function. Consider the fact that morphologically similar mergers will have have high overlap and low velocity error, but the converse of this statement is not necessarily true. If the overlap is high, there is a proability that the velocity error could still be large, or vice versa. This probability is decreased if we include both velocity and overlap in the calculation.
+It is important to have both the overlap and RMSE terms in the function. Consider the fact that morphologically similar mergers will have have high overlap and low velocity error, but the converse of this statement is not necessarily true. If the overlap is high, there is a probability that the velocity error could still be large, or vice versa. This probability is decreased if we include both velocity and overlap in the calculation.
 
 \subsection{Adaptive Metropolis-Hastings}
 
 % say something about the jump_sigma of the different params before talking about adaptive
 
-Due to the chaotic nature of the merger system, the error lanscape of the parameters space is incredibly complicated, having countless local minima and maxima. Consequently, any naive gradient-based optimization scheme would be completely unreliable. Therefore, we chose a more robust MCMC method called the Metropolis-Hastings algorithm. Given an initial set of parameter values, this method applies random--in our case normally-distributed--perturbations to the parameters. Each parameter $i$ has its own specified $\sigma_i$ for its associated distribution. At each subsequent step, the perturbations are accepted with probability $\alpha$, given by:
+Due to the chaotic nature of the merger system, the error landscape of the parameters space is incredibly complicated, having countless local minima and maxima. Consequently, any naive gradient-based optimization scheme would be completely unreliable. Therefore, we chose a more robust MCMC method called the Metropolis-Hastings algorithm. Given an initial set of parameter values, this method applies random--in our case normally-distributed--perturbations to the parameters. Each parameter $i$ has its own specified $\sigma_i$ for its associated distribution. At each subsequent step, the perturbations are accepted with probability $\alpha$, given by:
 \begin{equation}
 	\alpha(X', X) = \textrm{min}(1, \dfrac{P(X',X_0)}{P(X,X_0)})
 \end{equation}
-where $X'$ is the current, perturbed simulation and $X$ is last previously accepted simulation and $P$ is given by its logairthm:
+where $X'$ is the current, perturbed simulation and $X$ is last previously accepted simulation and $P$ is given by its logarithm:
 \begin{equation}
 	\textrm{log}(P(X,X_0)) = \dfrac{1}{2}\textrm{log}(2 \pi \Delta^2) + \dfrac{f(X,X_0)^2}{2 \Delta^2}
 \end{equation}
-where $\Delta$ is a value representing the scale of the error. Also, the larger $\Delta$ becomes, the more relaxed the method will be to accept poorer simulations. In the canonical algorithm, the $\sigma_i$ values are fixed; however, we included additional functionality to allow them to adapt if multiple simulations are consequtively rejected. Let $\sigma_{i,j}$ be the $\sigma$ value for the $i$-th parameter after $j$ consequtive rejections. Then,
+where $\Delta$ is a value representing the scale of the error. Also, the larger $\Delta$ becomes, the more relaxed the method will be to accept poorer simulations. In the canonical algorithm, the $\sigma_i$ values are fixed; however, we included additional functionality to allow them to adapt if multiple simulations are consequently rejected. Let $\sigma_{i,j}$ be the $\sigma$ value for the $i$-th parameter after $j$ consequently rejections. Then,
 \begin{equation}
 	\sigma_{i,j} = 
 	\begin{cases} 
@@ -231,19 +231,19 @@ and $0<a,b<1$. These two factors serve to alternate between increasing, decreasi
 
 %Everything described up to this point can be found in the canonical Metropolis-Hastings algorithm; however, due to the chaotic nature of our error function, we decided to add some extra functionality to assist the convergence of the algorithm. In the canonical algorithm, the $\sigma$ values for the parameter perturbations are fixed, but 
 
-\subsection{Probablity of Convergence Within $n$-Steps}
+\subsection{Probability of Convergence Within $n$-Steps}
 One of the most important problems we faced was that of determining how well our method converges. We wanted a technique which would account for both how accurately and how quickly convergence occurs as we varied the magnitude of the initial perturbation. Our final product was a technique which could calculate the probability of convergence within a fixed number of steps given an initial perturbation.
 
-Since MCMC methods are stochastic, individual runs tell us nothing about their convergence. We must run many tests and calculate statistics on the collective results. Therefore, our technique for testing consisted of running many instances of the MCMC, all with the same target and initial perturbation and calucating the percentage which converged (i.e., reached a minimum error threshold) so as to calculate an approximation to the convergence probability. This was done on a univariate basis by choosing an interval of evenly-spaced points centered on the target parameter value. The interval's width was chosen to be equal to twice the standard deviation of the top $25\%$ runs' value of that parameter. These points were then repeatedly used as the initial perturbation for the MCMC algorithm. By calcuating this probability and plotting it over the interval, we can visually inspect how much the shape of the error curve impacts the rate of convergence, as well as compare the convergence of different parameters. 
+Since MCMC methods are stochastic, individual runs tell us nothing about their convergence. We must run many tests and calculate statistics on the collective results. Therefore, our technique for testing consisted of running many instances of the MCMC, all with the same target and initial perturbation and calculating the percentage which converged (i.e., reached a minimum error threshold) so as to calculate an approximation to the convergence probability. This was done on a univariate basis by choosing an interval of evenly-spaced points centered on the target parameter value. The interval's width was chosen to be equal to twice the standard deviation of the top $25\%$ runs' value of that parameter. These points were then repeatedly used as the initial perturbation for the MCMC algorithm. By calculating this probability and plotting it over the interval, we can visually inspect how much the shape of the error curve impacts the rate of convergence, as well as compare the convergence of different parameters. 
 
 
 	
 \section{Results}
-There are several key points concerning different aspects of process which we must discuss before moving on to our results. First--concerning the particle distibution of the galaxies in the simulations--though the true galactic mass distribution is closer to an exponential decay as the radius increases, we chose a uniform density over the whole galaxy so that variations in density would be solely due to tidal disturbances rather than an inherent property of the galaxies, making our weighting scheme much more meaningful.
+There are several key points concerning different aspects of process which we must discuss before moving on to our results. First--concerning the particle distribution of the galaxies in the simulations--though the true galactic mass distribution is closer to an exponential decay as the radius increases, we chose a uniform density over the whole galaxy so that variations in density would be solely due to tidal disturbances rather than an inherent property of the galaxies, making our weighting scheme much more meaningful.
 % they're flat!!!
 Second--concerning image resolution in light of bin and particle numbers--clearly the more bins, the more precision with which we can measure the error. However, to ensure that there aren't any false empty bins, this requires more particles, i.e., longer simulation time. To achieve a balance between precision and runtime during testing, we broke up our testing into two main regimes: 1,000 particles per galaxy with $15 \times 15$ bins, and 10,000 particles per galaxy and $54 \times 54$ bins (this is the resolution of the MaNGA data). We would quickly test new modifications to our methods with low precision, but then collect data with high precision.
 
-Lastly--concerning the code itself--while the JSPAM code is written in Fortran, the entirety of the MCMC code is written in Python and parallelized with p-threads in C++. It is organized as follows: There is a top-level Python script which determines which points over the interval to choose as the intial parameters for the MCMC's. This script then calls parallelized C++ code which runs a set number of MCMC trials (written in another Python sciprt) per point. This MCMC script then calls the Fortran JSPAM code which performs a simulation and outputs the particle positions and velocities to a file. These files are used to compute the error at each step. In the end, the MCMC script outputs the Markov chain produced. Finally, by analyzing all of the Markvo chains collectively, we calulate the convergence probabilities.
+Lastly--concerning the code itself--while the JSPAM code is written in Fortran, the entirety of the MCMC code is written in Python and parallelized with p-threads in C++. It is organized as follows: There is a top-level Python script which determines which points over the interval to choose as the initial parameters for the MCMC's. This script then calls parallelized C++ code which runs a set number of MCMC trials (written in another Python script) per point. This MCMC script then calls the Fortran JSPAM code which performs a simulation and outputs the particle positions and velocities to a file. These files are used to compute the error at each step. In the end, the MCMC script outputs the Markov chain produced. Finally, by analyzing all of the Markov chains collectively, we calculate the convergence probabilities.
 \begin{figure}[!h]
 	\centering
 	\includegraphics[scale = 0.5]{Workflow_02}
@@ -265,7 +265,7 @@ For our purposes, we will use the best fit model as our target system rather tha
 
 
 \subsection{Error vs. Parameters}
-We began with a univariate analysis of the error function, sampling it over the interval dsecribed in section 2.3.  The following plots illustrate the error function's dependence on the 12 parameters. Notice how the minimum is located in the center of the interval, coincident with the target's parameter value.
+We began with a univariate analysis of the error function, sampling it over the interval described in section 2.3.  The following plots illustrate the error function's dependence on the 12 parameters. Notice how the minimum is located in the center of the interval, coincident with the target's parameter value.
 
 \begin{table}[!h]
 \begin{center}
@@ -319,7 +319,7 @@ We began with a univariate analysis of the error function, sampling it over the 
 %	During testing, our binning resolution ranged between 15$\times$15 to 54$\times$54 and particle numbers were between 1,000 and 10,000 per galaxy. 
 \end{figure}
 
-Notice how the prim/sec's (one of them) variance in error tends to be much larger than the other. This is because thhe prim is the one that is nearer to the observer and thus blocks the view of the other one. Were the opacity coefficient lowered, this effect would be reduced and the galaxies would have more similar error profiles.
+Notice how the prim/sec's (one of them) variance in error tends to be much larger than the other. This is because the prim is the one that is nearer to the observer and thus blocks the view of the other one. Were the opacity coefficient lowered, this effect would be reduced and the galaxies would have more similar error profiles.
 
 
 \subsection{Physical Convergence - what does it look like?}
@@ -356,7 +356,7 @@ We would like to acknowledge the assistance of volunteers in putting
 together this example manuscript and supplement.
 
 
-Funding for the Sloan Digital Sky Survey IV has been provided by the Alfred P. Sloan Foundation, the U.S. Department of Energy Office of Science, and the Participating Institutions. SDSS-IV acknowledges
+Funding for the Sloan Digital Sky Survey IV has been provided by the Alfred P. Sloan Foundation, the U.. Department of Energy Office of Science, and the Participating Institutions. SDSS-IV acknowledges
 support and resources from the Center for High-Performance Computing at
 the University of Utah. The SDSS web site is www.sdss.org.
 
