@@ -1,0 +1,11 @@
+bound -0.6,0.6,-0.4,0.8,-1.0,4.0
+ind 5
+alpha 10.0
+multStep 1.0
+nGen 31
+targNum 1
+measErr 0.05
+weights 0
+nBin 15
+nStep 100
+redos 100

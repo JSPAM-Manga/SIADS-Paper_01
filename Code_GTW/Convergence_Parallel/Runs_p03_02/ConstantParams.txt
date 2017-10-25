@@ -1,0 +1,9 @@
+measErr 0.05
+weights 0
+alpha 10.0
+ind 3
+nBin 15
+multStep 1.0
+nStep 50
+bound -0.6,0.6,-0.4,0.8,-1.0,4.0
+targNum 1
